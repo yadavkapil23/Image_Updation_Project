@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Search Images - {{ product.name }} - Smart Image Updater{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>
+                    <i class="fas fa-search me-2"></i>Search Images
+                </h2>
+                <p class="text-muted mb-0">
+                    Finding images for: <strong>{{ product.name }}</strong> ({{ product.code }})
+                </p>
+            </div>
+            <a href="{{ url_for('product_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Products
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-search me-2"></i>Search for Product Images
+                </h5>
+            </div>
+            <div class="card-body" id="searchContainer">
+                <form method="POST" id="searchForm">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.search_term.label(class="form-label") }}
+                        {{ form.search_term(class="form-control", value=product.name, placeholder="Enter search terms (e.g., " + product.name + " product") }}
+                        <div class="form-text">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            Try different search terms for better results. You can use product name, code, or related keywords.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+                
+                <!-- Search Suggestions -->
+                <div class="mt-3">
+                    <h6>Suggested Search Terms:</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                onclick="setSearchTerm('{{ product.name }}')">
+                            {{ product.name }}
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                onclick="setSearchTerm('{{ product.name }} product')">
+                            {{ product.name }} product
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                onclick="setSearchTerm('{{ product.code }}')">
+                            {{ product.code }}
+                        </button>
+                        {% if product.name.split()|length > 1 %}
+                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                    onclick="setSearchTerm('{{ product.name.split()[0] }}')">
+                                {{ product.name.split()[0] }}
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Initial Search Results -->
+        {% if initial_images %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-images me-2"></i>Initial Search Results for "{{ search_term }}"
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for image in initial_images %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <img src="{{ image.url }}" class="card-img-top" alt="{{ image.title }}" 
+                                 style="height: 200px; object-fit: cover;">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ image.title }}</h6>
+                                <p class="card-text small text-muted">{{ image.source }}</p>
+                                <button class="btn btn-primary btn-sm w-100" 
+                                        onclick="selectImage('{{ image.url }}', '{{ product.id }}')">
+                                    <i class="fas fa-check me-1"></i>Select Image
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Product Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Product Name:</strong><br>
+                    {{ product.name }}
+                </div>
+                <div class="mb-3">
+                    <strong>Product Code:</strong><br>
+                    {{ product.code }}
+                </div>
+                <div class="mb-3">
+                    <strong>Status:</strong><br>
+                    {% if product.has_image %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i>Has Image
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>No Image
+                        </span>
+                    {% endif %}
+                </div>
+                <div>
+                    <strong>Created:</strong><br>
+                    {{ product.created_at.strftime('%Y-%m-%d %H:%M') if product.created_at else 'N/A' }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Search Tips -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-tips me-2"></i>Search Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0 small">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-1"></i>
+                        Use specific product names
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-1"></i>
+                        Add "product" or "item" to search terms
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-1"></i>
+                        Try different variations of the name
+                    </li>
+                    <li>
+                        <i class="fas fa-check text-success me-1"></i>
+                        Use brand names if applicable
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Preview Modal -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Image Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" alt="Image Preview">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function setSearchTerm(term) {
+    document.getElementById('search_term').value = term;
+}
+
+function selectImage(imageUrl, productId) {
+    if (confirm('Are you sure you want to select this image for the product?')) {
+        fetch(`/products/${productId}/update-image`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image_url: imageUrl
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Image updated successfully!');
+                window.location.href = '/products';
+            } else {
+                alert('Error updating image: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating image. Please try again.');
+        });
+    }
+}
+
+// Auto-focus on search input
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search_term');
+    if (searchInput) {
+        searchInput.focus();
+    }
+});
+</script>
+{% endblock %} 

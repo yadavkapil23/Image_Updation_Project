@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Preview Images - {{ product.name }} - Smart Image Updater{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>
+                    <i class="fas fa-images me-2"></i>Image Preview
+                </h2>
+                <p class="text-muted mb-0">
+                    Select an image for: <strong>{{ product.name }}</strong> ({{ product.code }})
+                </p>
+                <p class="text-muted mb-0">
+                    Search term: <strong>"{{ search_term }}"</strong>
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('search_images', product_id=product.id) }}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search me-2"></i>New Search
+                </a>
+                <a href="{{ url_for('product_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Products
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if images %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-images me-2"></i>Found {{ images|length }} Images
+                    </h5>
+                    <div>
+                        <button type="button" class="btn btn-success" id="updateImageBtn" disabled
+                                onclick="updateProductImage({{ product.id }})">
+                            <i class="fas fa-save me-2"></i>Update Product Image
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Click on an image to select it, then click "Update Product Image" to save it.
+                    </div>
+                    
+                    <div class="search-results">
+                        {% for image in images %}
+                        <div class="image-option" onclick="selectImage('{{ image.url }}', this)">
+                            <img src="{{ image.url }}" 
+                                 class="image-preview" 
+                                 alt="{{ image.title or 'Product image' }}"
+                                 title="{{ image.title or 'Click to select' }}"
+                                 onerror="handleImageError(this);">
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-tag me-1"></i>{{ image.source }}
+                                </small>
+                                {% if image.title %}
+                                <br>
+                                <small class="text-truncate d-block" title="{{ image.title }}">
+                                    {{ image.title[:50] }}{% if image.title|length > 50 %}...{% endif %}
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Selected Image Preview -->
+    <div class="row mt-4" id="selectedImagePreview" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>Selected Image
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <img id="selectedImage" src="" class="img-fluid rounded" style="max-height: 300px;">
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-success" onclick="updateProductImage({{ product.id }})">
+                            <i class="fas fa-save me-2"></i>Update Product Image
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary ms-2" onclick="clearSelection()">
+                            <i class="fas fa-times me-2"></i>Clear Selection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                    <h3 class="text-muted">No Images Found</h3>
+                    <p class="text-muted">
+                        No images were found for the search term "{{ search_term }}".
+                        Try using different keywords or search terms.
+                    </p>
+                    <div class="mt-4">
+                        <a href="{{ url_for('search_images', product_id=product.id) }}" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Try Different Search
+                        </a>
+                        <a href="{{ url_for('product_list') }}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Product Information -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Product Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Product Name:</strong><br>
+                    {{ product.name }}
+                </div>
+                <div class="mb-3">
+                    <strong>Product Code:</strong><br>
+                    {{ product.code }}
+                </div>
+                <div class="mb-3">
+                    <strong>Current Status:</strong><br>
+                    {% if product.has_image %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i>Has Image
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>No Image
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Choose high-quality images for better results
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Images will be automatically cropped to square format
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        You can always search for more images later
+                    </li>
+                    <li>
+                        <i class="fas fa-check text-success me-2"></i>
+                        Selected images are saved locally for faster access
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedImageUrl = null;
+
+function selectImage(imageUrl, element) {
+    // Remove previous selections
+    document.querySelectorAll('.image-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Select current image
+    element.classList.add('selected');
+    selectedImageUrl = imageUrl;
+    
+    // Show selected image preview
+    const preview = document.getElementById('selectedImagePreview');
+    const selectedImg = document.getElementById('selectedImage');
+    if (preview && selectedImg) {
+        selectedImg.src = imageUrl;
+        preview.style.display = 'block';
+    }
+    
+    // Enable update button
+    const updateBtn = document.getElementById('updateImageBtn');
+    if (updateBtn) {
+        updateBtn.disabled = false;
+    }
+}
+
+function clearSelection() {
+    // Remove selections
+    document.querySelectorAll('.image-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Hide preview
+    const preview = document.getElementById('selectedImagePreview');
+    if (preview) {
+        preview.style.display = 'none';
+    }
+    
+    // Disable update button
+    const updateBtn = document.getElementById('updateImageBtn');
+    if (updateBtn) {
+        updateBtn.disabled = true;
+    }
+    
+    selectedImageUrl = null;
+}
+
+function handleImageError(img) {
+    console.log('Image failed to load:', img.src);
+    img.style.display = 'none';
+    const container = img.parentElement;
+    if (container) {
+        const errorDiv = container.querySelector('.mt-2');
+        if (errorDiv) {
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i> Image failed to load';
+        }
+    }
+}
+
+// Handle image load errors
+document.addEventListener('DOMContentLoaded', function() {
+    const images = document.querySelectorAll('.image-preview');
+    images.forEach(img => {
+        img.addEventListener('error', function() {
+            handleImageError(this);
+        });
+        img.addEventListener('load', function() {
+            console.log('Image loaded successfully:', this.src);
+        });
+    });
+});
+
+function updateProductImage(productId) {
+    if (!selectedImageUrl) {
+        alert('Please select an image first.');
+        return;
+    }
+    
+    showLoading();
+    
+    fetch(`/products/${productId}/update-image`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            image_url: selectedImageUrl
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            showAlert('Image updated successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = '/products';
+            }, 1500);
+        } else {
+            showAlert(data.error || 'Failed to update image', 'error');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        console.error('Error:', error);
+        showAlert('An error occurred while updating the image', 'error');
+    });
+}
+</script>
+{% endblock %} 

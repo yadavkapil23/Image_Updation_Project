@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Smart Image Updater{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="text-center">
+            <h1 class="display-4 fw-bold mb-4">
+                <span class="gradient-text">Smart Image Updater</span>
+            </h1>
+            <p class="lead fs-4 text-muted mb-4">
+                Automatically fetch and update product images for your e-commerce catalog
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a class="btn btn-primary btn-lg" href="{{ url_for('product_list') }}" role="button">
+                    <i class="fas fa-list me-2"></i>View Products
+                </a>
+                <a class="btn btn-success btn-lg" href="{{ url_for('add_product') }}" role="button">
+                    <i class="fas fa-plus me-2"></i>Add Product
+                </a>
+                <a class="btn btn-outline-primary btn-lg" href="{{ url_for('products_without_images') }}" role="button">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Missing Images
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-5">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stats-card">
+            <div class="stats-number">{{ total_products }}</div>
+            <div class="stats-label">Total Products</div>
+            <i class="fas fa-box fa-2x text-primary mt-3"></i>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stats-card">
+            <div class="stats-number">{{ products_with_images }}</div>
+            <div class="stats-label">With Images</div>
+            <i class="fas fa-check-circle fa-2x text-success mt-3"></i>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stats-card">
+            <div class="stats-number">{{ products_without_images }}</div>
+            <div class="stats-label">Missing Images</div>
+            <i class="fas fa-exclamation-triangle fa-2x text-warning mt-3"></i>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stats-card">
+            <div class="stats-number">{{ completion_percentage }}%</div>
+            <div class="stats-label">Completion Rate</div>
+            <i class="fas fa-chart-line fa-2x text-info mt-3"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Bar -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Catalog Completion Progress
+                    </h5>
+                    <span class="badge bg-primary fs-6">{{ completion_percentage }}% Complete</span>
+                </div>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: {{ completion_percentage }}%;" 
+                         aria-valuenow="{{ completion_percentage }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        {{ completion_percentage }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mb-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-search fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Smart Search</h5>
+                <p class="card-text">
+                    Automatically search the web for product images using intelligent algorithms. 
+                    Multiple search engines ensure comprehensive and relevant results.
+                </p>
+                <div class="mt-3">
+                    <span class="badge bg-primary me-1">Picsum Photos</span>
+                    <span class="badge bg-info me-1">Intelligent</span>
+                    <span class="badge bg-success">Fast</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-crop-alt fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title">Image Processing</h5>
+                <p class="card-text">
+                    Convert any image to square format (500x500px) with intelligent cropping. 
+                    Maintains image quality while ensuring consistent dimensions.
+                </p>
+                <div class="mt-3">
+                    <span class="badge bg-success me-1">Square Format</span>
+                    <span class="badge bg-warning me-1">High Quality</span>
+                    <span class="badge bg-info">Optimized</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-database fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">Database Integration</h5>
+                <p class="card-text">
+                    Seamlessly update your product database with new image paths. 
+                    Track which products need images and manage your catalog efficiently.
+                </p>
+                <div class="mt-3">
+                    <span class="badge bg-info me-1">SQLite</span>
+                    <span class="badge bg-primary me-1">Real-time</span>
+                    <span class="badge bg-success">Organized</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Section -->
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Recent Products
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_products %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Code</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in recent_products %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if product.has_image %}
+                                                <img src="{{ url_for('static', filename='uploads/products/' + product.image_path) }}" 
+                                                     alt="{{ product.name }}" 
+                                                     class="rounded me-3" 
+                                                     style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-0">{{ product.name }}</h6>
+                                                <small class="text-muted">{{ product.created_at.strftime('%Y-%m-%d') }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><code>{{ product.code }}</code></td>
+                                    <td>
+                                        {% if product.has_image %}
+                                            <span class="badge bg-success">Has Image</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">No Image</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('search_images', product_id=product.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-search"></i>
+                                            </a>
+                                            {% if product.has_image %}
+                                                <button class="btn btn-sm btn-outline-info" 
+                                                        onclick="viewImage('{{ product.image_path }}')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No products found. Add your first product to get started!</p>
+                        <a href="{{ url_for('add_product') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add First Product
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Products Needing Images
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if products_needing_images %}
+                    <div class="list-group list-group-flush">
+                        {% for product in products_needing_images %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ product.name }}</h6>
+                                <small class="text-muted">{{ product.code }}</small>
+                            </div>
+                            <a href="{{ url_for('search_images', product_id=product.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-search me-1"></i>Search
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('products_without_images') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-list me-2"></i>View All Missing Images
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="text-success fw-bold">All products have images!</p>
+                        <p class="text-muted small">Your catalog is complete and ready to go.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.gradient-text {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.feature-icon {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .feature-icon {
+    transform: scale(1.1);
+}
+</style>
+{% endblock %} 

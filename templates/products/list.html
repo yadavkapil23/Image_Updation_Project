@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title or 'All Products' }} - Smart Image Updater{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1">
+            <i class="fas fa-list me-2"></i>
+            {{ title or 'All Products' }}
+        </h2>
+        <p class="text-muted mb-0">
+            {% if products %}
+                Showing {{ products|length }} product{{ 's' if products|length != 1 else '' }}
+            {% else %}
+                No products found
+            {% endif %}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('add_product') }}" class="btn btn-success">
+            <i class="fas fa-plus me-2"></i>Add Product
+        </a>
+        <a href="{{ url_for('products_without_images') }}" class="btn btn-outline-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>Missing Images
+        </a>
+    </div>
+</div>
+
+{% if products %}
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ products|length }}</div>
+                <div class="stats-label">Total Products</div>
+                <i class="fas fa-box fa-2x text-primary mt-3"></i>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ products|selectattr('image_path')|list|length }}</div>
+                <div class="stats-label">With Images</div>
+                <i class="fas fa-check-circle fa-2x text-success mt-3"></i>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ products|rejectattr('image_path')|list|length }}</div>
+                <div class="stats-label">Missing Images</div>
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mt-3"></i>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card">
+                <div class="stats-number">
+                    {% set with_images = products|selectattr('image_path')|list|length %}
+                    {% set total = products|length %}
+                    {% if total > 0 %}
+                        {{ ((with_images / total) * 100)|round(1) }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </div>
+                <div class="stats-label">Completion Rate</div>
+                <i class="fas fa-chart-line fa-2x text-info mt-3"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row">
+        {% for product in products %}
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 product-card">
+                <!-- Product Image Section -->
+                <div class="product-image-container">
+                    {% if product.image_path %}
+                        <img src="/uploads/{{ product.image_path.replace('uploads/', '') }}" 
+                             class="product-image" 
+                             alt="{{ product.name }}"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder" style="display: none;">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    {% else %}
+                        <div class="image-placeholder">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Status Badge -->
+                    <div class="status-badge">
+                        {% if product.image_path %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Has Image
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-exclamation-triangle me-1"></i>No Image
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Product Info -->
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="flex-grow-1">
+                            <h5 class="card-title mb-1">{{ product.name }}</h5>
+                            <p class="card-text text-muted small mb-0">
+                                <i class="fas fa-barcode me-1"></i>{{ product.code }}
+                            </p>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('search_images', product_id=product.id) }}">
+                                        <i class="fas fa-search me-2"></i>Search Images
+                                    </a>
+                                </li>
+                                {% if product.image_path %}
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="viewImage('{{ product.image_path }}')">
+                                        <i class="fas fa-eye me-2"></i>View Image
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" onclick="deleteProduct({{ product.id }})">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Creation Date -->
+                    <div class="mt-auto">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            Created: {{ product.created_at.strftime('%Y-%m-%d') if product.created_at else 'N/A' }}
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Action Button -->
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <div class="d-grid">
+                        {% if product.image_path %}
+                            <button class="btn btn-outline-primary btn-sm" 
+                                    onclick="viewImage('{{ product.image_path }}')">
+                                <i class="fas fa-eye me-1"></i>View Image
+                            </button>
+                        {% else %}
+                            <a href="{{ url_for('search_images', product_id=product.id) }}" 
+                               class="btn btn-primary btn-sm">
+                                <i class="fas fa-search me-1"></i>Find Images
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <div class="empty-state">
+            <i class="fas fa-box-open fa-4x text-muted mb-4"></i>
+            <h3 class="text-muted mb-3">No Products Found</h3>
+            <p class="text-muted mb-4">Get started by adding your first product to the catalog.</p>
+            <a href="{{ url_for('add_product') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus me-2"></i>Add Your First Product
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-image me-2"></i>Product Image
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid rounded" alt="Product Image">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.product-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+}
+
+.product-image-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.05);
+}
+
+.image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-100);
+}
+
+.status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.empty-state {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.empty-state i {
+    opacity: 0.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .product-image-container {
+        height: 150px;
+    }
+    
+    .stats-card {
+        padding: 1rem;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewImage(imagePath) {
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    const modalImage = document.getElementById('modalImage');
+    
+    // Simplify the path construction
+    let imageUrl;
+    if (imagePath && imagePath.startsWith('uploads/')) {
+        imageUrl = `/uploads/${imagePath.replace('uploads/', '')}`;
+    } else if (imagePath) {
+        imageUrl = `/uploads/${imagePath}`;
+    } else {
+        imageUrl = '';
+    }
+    
+    // Set the image source
+    modalImage.src = imageUrl;
+    
+    // Add error handling
+    modalImage.onerror = function() {
+        this.style.display = 'none';
+        this.parentElement.innerHTML = '<div class="text-center text-muted"><i class="fas fa-exclamation-triangle fa-3x mb-3"></i><p>Image not found</p></div>';
+    };
+    
+    modalImage.onload = function() {
+        this.style.display = 'block';
+    };
+    
+    modal.show();
+}
+
+function deleteProduct(productId) {
+    if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+        // Add delete functionality here
+        console.log('Delete product:', productId);
+        // You can implement the actual delete functionality here
+        // For now, just show a message
+        alert('Delete functionality would be implemented here.');
+    }
+}
+
+// Handle image loading errors globally
+document.addEventListener('DOMContentLoaded', function() {
+    const productImages = document.querySelectorAll('.product-image');
+    productImages.forEach(img => {
+        img.addEventListener('error', function() {
+            console.log('Image failed to load:', this.src);
+            this.style.display = 'none';
+            const placeholder = this.nextElementSibling;
+            if (placeholder && placeholder.classList.contains('image-placeholder')) {
+                placeholder.style.display = 'flex';
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 
