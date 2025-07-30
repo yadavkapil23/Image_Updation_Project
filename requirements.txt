@@ -11,4 +11,5 @@ selenium==4.15.2
 webdriver-manager==4.0.1
 markdown==3.5.1
 weasyprint==60.2
-reportlab==4.0.7 
+reportlab==4.0.7
+gunicorn==21.2.0 
